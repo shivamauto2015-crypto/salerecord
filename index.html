@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoParts Sales Manager</title>
+  <meta name="description" content="Manage spare parts sales, multi-item challans, discounts, records, and Excel/JSON backups." />
+  <meta property="og:title" content="AutoParts Sales Manager" />
+  <meta property="og:description" content="Manage spare parts sales, multi-item challans, discounts, records, and Excel/JSON backups." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">AP</div>
+        <div>
+          <strong>AutoParts</strong>
+          <span>Sales Manager</span>
+        </div>
+      </div>
+
+      <nav aria-label="Main navigation">
+        <button type="button" class="nav-link active" data-view="dashboard">
+          <span>▦</span> Dashboard
+        </button>
+        <button type="button" class="nav-link" data-view="new-sale">
+          <span>＋</span> New Challan
+        </button>
+        <button type="button" class="nav-link" data-view="records">
+          <span>▤</span> Sale Records
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="storage-note">
+          <span class="storage-icon">⛁</span>
+          <div>
+            <b>Local data storage</b>
+            <small>Saved in this browser</small>
+          </div>
+        </div>
+        <button type="button" class="nav-link" data-view="backup">
+          <span>⇅</span> Backup &amp; Export
+        </button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Inventory &amp; Sales</p>
+          <h1 id="page-title">Dashboard</h1>
+        </div>
+        <div class="top-actions">
+          <span class="today" id="today-label"></span>
+          <button type="button" class="btn btn-primary" id="header-add">＋ Add New Challan</button>
+        </div>
+      </header>
+
+      <section class="view active" id="dashboard-view">
+        <div class="welcome-row">
+          <div>
+            <h2>Sales overview</h2>
+            <p>Track your spare parts sales and challans in one place.</p>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <div class="stat-icon blue">₹</div>
+            <div>
+              <span>Total Net Sale</span>
+              <strong id="stat-sales">₹0.00</strong>
+              <small>After discount</small>
+            </div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-icon purple">▤</div>
+            <div>
+              <span>Total Challans</span>
+              <strong id="stat-challans">0</strong>
+              <small>Saved challans</small>
+            </div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-icon orange">%</div>
+            <div>
+              <span>Total Discount</span>
+              <strong id="stat-discount">₹0.00</strong>
+              <small>Discount given</small>
+            </div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-icon green">▣</div>
+            <div>
+              <span>Parts Sold</span>
+              <strong id="stat-qty">0</strong>
+              <small>Total quantity</small>
+            </div>
+          </article>
+        </div>
+
+        <div class="panel">
+          <div class="panel-heading">
+            <div>
+              <h3>Recent challans</h3>
+              <p>Your latest sale entries</p>
+            </div>
+            <button type="button" class="btn btn-light" data-go="records">View all records →</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Challan No.</th>
+                  <th>Date</th>
+                  <th>Customer</th>
+                  <th>Parts</th>
+                  <th class="num">Net Amount</th>
+                  <th class="num">Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-table"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="recent-empty">
+            No sales recorded yet. Create your first challan to get started.
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="new-sale-view">
+        <div class="section-intro">
+          <div>
+            <h2 id="form-heading">Create new challan</h2>
+            <p>Add one or more spare parts to a single challan.</p>
+          </div>
+          <span class="entry-mode" id="form-mode-label">New sale entry</span>
+        </div>
+
+        <form id="sale-form">
+          <input type="hidden" id="editing-id" />
+
+          <div class="panel form-panel">
+            <div class="panel-title">
+              <span class="step">1</span>
+              <div>
+                <h3>Challan details</h3>
+                <p>Basic information for this sale</p>
+              </div>
+            </div>
+            <div class="form-grid">
+              <label>
+                Challan Number
+                <input id="challan-no" required placeholder="e.g. CH-001" />
+              </label>
+              <label>
+                Sale Date
+                <input id="sale-date" type="date" required />
+              </label>
+              <label>
+                Customer Name <em>(optional)</em>
+                <input id="customer" placeholder="Customer / party name" />
+              </label>
+              <label>
+                Remarks <em>(optional)</em>
+                <input id="remarks" placeholder="Any additional note" />
+              </label>
+            </div>
+          </div>
+
+          <div class="panel form-panel">
+            <div class="panel-title">
+              <span class="step">2</span>
+              <div>
+                <h3>Parts details</h3>
+                <p>Add every item included in this challan</p>
+              </div>
+              <button type="button" class="btn btn-light add-item" id="add-item">＋ Add another part</button>
+            </div>
+            <div class="table-wrap item-table-wrap">
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th>Part Name</th>
+                    <th>Part Number</th>
+                    <th>Qty</th>
+                    <th>Rate (₹)</th>
+                    <th>Discount Type</th>
+                    <th>Discount</th>
+                    <th class="num">Net Amount</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="items-body"></tbody>
+              </table>
+            </div>
+            <div class="mobile-hint">On smaller screens, scroll the parts table horizontally.</div>
+          </div>
+
+          <div class="panel totals-panel">
+            <div class="totals-note">
+              <b>Challan summary</b>
+              <span>Amounts are calculated automatically.</span>
+            </div>
+            <div class="totals">
+              <div>
+                <span>Subtotal</span>
+                <b id="subtotal">₹0.00</b>
+              </div>
+              <div>
+                <span>Total Discount</span>
+                <b id="discount-total">₹0.00</b>
+              </div>
+              <div class="grand-total">
+                <span>Net Payable</span>
+                <strong id="net-total">₹0.00</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-light" id="cancel-form">Cancel</button>
+            <button type="button" class="btn btn-light" id="print-challan">Print</button>
+            <button type="submit" class="btn btn-primary" id="save-btn">Save Challan</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="view" id="records-view">
+        <div class="section-intro">
+          <div>
+            <h2>Sale records</h2>
+            <p>Search, review, edit or delete saved challans.</p>
+          </div>
+          <button type="button" class="btn btn-primary" id="records-add">＋ New Challan</button>
+        </div>
+
+        <div class="panel">
+          <div class="toolbar">
+            <input
+              id="search-records"
+              class="search"
+              placeholder="Search challan, part name, number or customer..."
+            />
+            <div class="toolbar-right">
+              <input type="date" id="filter-from" aria-label="From date" />
+              <input type="date" id="filter-to" aria-label="To date" />
+              <button type="button" class="btn btn-light" id="clear-filters">Clear</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Challan No.</th>
+                  <th>Date</th>
+                  <th>Customer</th>
+                  <th class="num">Items</th>
+                  <th class="num">Subtotal</th>
+                  <th class="num">Discount</th>
+                  <th class="num">Net Amount</th>
+                  <th class="num">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="records-table"></tbody>
+            </table>
+          </div>
+          <div class="empty-state" id="records-empty">No matching sale records found.</div>
+        </div>
+      </section>
+
+      <section class="view" id="backup-view">
+        <div class="section-intro">
+          <div>
+            <h2>Backup &amp; export</h2>
+            <p>Keep a safe copy of your sales data and open it in Excel.</p>
+          </div>
+        </div>
+
+        <div class="backup-grid">
+          <article class="panel backup-card">
+            <div class="backup-icon blue">⇩</div>
+            <h3>Export to Excel</h3>
+            <p>Download your challans and individual part details in an Excel workbook.</p>
+            <button type="button" class="btn btn-primary" id="export-excel">Download Excel (.xlsx)</button>
+          </article>
+
+          <article class="panel backup-card">
+            <div class="backup-icon green">{ }</div>
+            <h3>Download JSON backup</h3>
+            <p>Save a backup file containing all your challans. Keep it somewhere safe.</p>
+            <button type="button" class="btn btn-light" id="export-json">Download JSON backup</button>
+          </article>
+
+          <article class="panel backup-card">
+            <div class="backup-icon purple">⇧</div>
+            <h3>Restore JSON backup</h3>
+            <p>Import a previously downloaded JSON backup into this browser.</p>
+            <label class="btn btn-light file-button">
+              Choose JSON file
+              <input type="file" id="import-json" accept=".json,application/json" />
+            </label>
+          </article>
+        </div>
+
+        <div class="panel zip-panel" id="zip-download-panel">
+          <div>
+            <h3>Download Offline Project (.zip)</h3>
+            <p>Download the complete HTML, CSS, JS, and offline Excel library files in a single ZIP archive to run locally.</p>
+          </div>
+          <a href="autoparts-sales-manager.zip" download="autoparts-sales-manager.zip" class="btn btn-primary zip-btn">Download Project (.zip)</a>
+        </div>
+
+        <div class="panel data-info">
+          <h3>How your data is stored</h3>
+          <p>
+            Sales are saved in this browser using LocalStorage. They remain available on this device and browser.
+            Clearing browser data may erase them, so download a JSON backup regularly.
+          </p>
+          <div class="data-count">
+            <b id="backup-count">0</b>
+            <span>challans currently saved</span>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        AutoParts Sales Manager <span>·</span> Simple, offline-friendly sales record keeping
+      </footer>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="confirm-modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h3 id="modal-title">Confirm action</h3>
+      <p id="modal-message"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-light" id="modal-cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="modal-confirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

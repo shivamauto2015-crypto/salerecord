@@ -1,0 +1,6 @@
+{
+  "name": "AutoParts Sales Manager",
+  "description": "Manage spare parts sales, multi-item challans, discounts, records, and Excel/JSON backups.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

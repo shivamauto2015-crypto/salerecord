@@ -1,0 +1,28 @@
+AUTOPARTS SALES MANAGER
+=======================
+
+HOW TO RUN
+1. Extract the ZIP file.
+2. Open the extracted folder.
+3. Double-click index.html (Chrome or Edge recommended).
+4. Start adding challans.
+
+FEATURES
+- Multiple spare parts in one challan
+- Automatic subtotal, discount and net amount calculations
+- Discount as rupees or percentage per item
+- Search and date filtering
+- Edit and delete challans
+- Dashboard summary
+- Excel export with two sheets: Challan Summary and Part Details
+- JSON backup download and restore
+- Browser LocalStorage persistence
+
+IMPORTANT DATA NOTE
+Data is stored in LocalStorage in the browser and on the device where you use the app.
+Do not clear browser site data unless you have a JSON backup.
+Excel export loads the SheetJS library from a CDN, so an internet connection is required for XLSX export.
+The rest of the app works locally after files are extracted.
+
+TECHNOLOGY
+HTML, CSS, JavaScript, JSON (LocalStorage + JSON import/export), SheetJS XLSX.
