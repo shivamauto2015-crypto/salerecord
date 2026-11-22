@@ -117,6 +117,7 @@
               <thead>
                 <tr>
                   <th>Challan No.</th>
+                  <th>Billed No.</th>
                   <th>Date</th>
                   <th>Customer</th>
                   <th>Parts</th>
@@ -167,6 +168,10 @@
                 <input id="customer" placeholder="Customer / party name" />
               </label>
               <label>
+                Billed Number <em>(optional)</em>
+                <input id="billed-no" placeholder="e.g. BILL-001" />
+              </label>
+              <label class="full-span">
                 Remarks <em>(optional)</em>
                 <input id="remarks" placeholder="Any additional note" />
               </label>
@@ -200,6 +205,16 @@
               </table>
             </div>
             <div class="mobile-hint">On smaller screens, scroll the parts table horizontally.</div>
+            <div class="next-part-prompt" id="next-part-prompt" aria-live="polite">
+              <div class="next-part-text">
+                <b>Add another part?</b>
+                <span>Press Enter to add next part details, or choose Save Challan.</span>
+              </div>
+              <div class="next-part-actions">
+                <button type="button" class="btn btn-primary" id="prompt-add-part">＋ Add Another Part</button>
+                <button type="button" class="btn btn-light" id="prompt-save-challan">Save Challan</button>
+              </div>
+            </div>
           </div>
 
           <div class="panel totals-panel">
@@ -258,6 +273,7 @@
               <thead>
                 <tr>
                   <th>Challan No.</th>
+                  <th>Billed No.</th>
                   <th>Date</th>
                   <th>Customer</th>
                   <th class="num">Items</th>

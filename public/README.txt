@@ -8,8 +8,8 @@ HOW TO RUN
 4. Start adding challans.
 
 FEATURES
-- Multiple spare parts in one challan
-- Fast Enter-key navigation: Challan Number -> Sale Date -> Customer Name -> Remarks -> Part Name -> Part Number -> Qty -> Rate -> Save
+- Multiple spare parts in one challan (including Challan Number and optional Billed Number)
+- Fast Enter-key navigation: Challan Number -> Sale Date -> Customer Name -> Billed Number -> Remarks -> Part Name -> Part Number -> Qty -> Rate -> Save
 - Auto-focus on first field when adding another part row
 - Trash/delete icon button on each part row
 - Print button on New Challan form (opens a printer-friendly version in a new tab)

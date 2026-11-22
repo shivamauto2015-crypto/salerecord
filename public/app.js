@@ -224,7 +224,41 @@ function nextChallanNo() {
   return "CH-" + String(max + 1).padStart(3, "0");
 }
 
+function hideNextPartPrompt() {
+  const prompt = $("next-part-prompt");
+  if (prompt) prompt.classList.remove("show");
+}
+
+function showNextPartPrompt() {
+  const prompt = $("next-part-prompt");
+  if (!prompt) return;
+  prompt.classList.add("show");
+  prompt.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  requestAnimationFrame(() => focusField($("prompt-add-part")));
+}
+
+function appendPartAndFocus() {
+  hideNextPartPrompt();
+  const newRow = addItem();
+  const firstInput = newRow?.querySelector("input");
+  if (firstInput) {
+    firstInput.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    focusField(firstInput);
+  }
+}
+
+function submitChallanForm() {
+  hideNextPartPrompt();
+  const form = $("sale-form");
+  if (typeof form.requestSubmit === "function") {
+    form.requestSubmit();
+  } else {
+    $("save-btn").click();
+  }
+}
+
 function resetForm() {
+  hideNextPartPrompt();
   $("sale-form").reset();
   $("editing-id").value = "";
   $("form-heading").textContent = "Create new challan";
@@ -251,17 +285,38 @@ function openNew() {
   requestAnimationFrame(() => focusField($("challan-no"), true));
 }
 
-$("add-item").addEventListener("click", () => {
-  const newRow = addItem();
-  const firstInput = newRow?.querySelector("input");
-  if (firstInput) {
-    firstInput.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    focusField(firstInput);
+$("add-item").addEventListener("click", appendPartAndFocus);
+$("prompt-add-part").addEventListener("click", appendPartAndFocus);
+$("prompt-save-challan").addEventListener("click", submitChallanForm);
+
+$("next-part-prompt").addEventListener("keydown", (e) => {
+  if (e.key === "ArrowRight") {
+    e.preventDefault();
+    focusField($("prompt-save-challan"));
+  } else if (e.key === "ArrowLeft") {
+    e.preventDefault();
+    focusField($("prompt-add-part"));
+  } else if (e.key === "Escape") {
+    e.preventDefault();
+    hideNextPartPrompt();
+    const rows = $("items-body").querySelectorAll("tr");
+    const lastRow = rows[rows.length - 1];
+    if (lastRow) focusField(lastRow.querySelector(".rate"), true);
   }
 });
+
 $("header-add").addEventListener("click", openNew);
 $("records-add").addEventListener("click", openNew);
-$("cancel-form").addEventListener("click", () => showView("dashboard"));
+$("cancel-form").addEventListener("click", () => {
+  hideNextPartPrompt();
+  showView("dashboard");
+});
+
+$("sale-form").addEventListener("input", () => {
+  if ($("next-part-prompt").classList.contains("show")) {
+    hideNextPartPrompt();
+  }
+});
 
 $("sale-form").addEventListener("keydown", (e) => {
   if (e.key !== "Enter" || e.isComposing) return;
@@ -280,6 +335,10 @@ $("sale-form").addEventListener("keydown", (e) => {
     return;
   }
   if (target.id === "customer") {
+    focusField($("billed-no"));
+    return;
+  }
+  if (target.id === "billed-no") {
     focusField($("remarks"));
     return;
   }
@@ -311,14 +370,15 @@ $("sale-form").addEventListener("keydown", (e) => {
     const nextRow = row.nextElementSibling;
     if (nextRow) {
       focusField(nextRow.querySelector(".part-name"));
-    } else {
-      const form = $("sale-form");
-      if (typeof form.requestSubmit === "function") {
-        form.requestSubmit();
-      } else {
-        $("save-btn").click();
-      }
+      return;
     }
+    const partNameInput = row.querySelector(".part-name");
+    if (!partNameInput.value.trim()) {
+      toast("Please enter part name first");
+      focusField(partNameInput);
+      return;
+    }
+    showNextPartPrompt();
   }
 });
 
@@ -336,6 +396,7 @@ $("sale-form").addEventListener("submit", (e) => {
   const record = {
     id: editingId || "sale_" + Date.now(),
     challanNo: $("challan-no").value.trim(),
+    billedNo: $("billed-no").value.trim(),
     date: $("sale-date").value,
     customer: $("customer").value.trim(),
     remarks: $("remarks").value.trim(),
@@ -413,6 +474,7 @@ function renderDashboard() {
       (c) => `
       <tr>
         <td>${escapeHtml(c.challanNo)}</td>
+        <td>${escapeHtml(c.billedNo || "—")}</td>
         <td>${formatDate(c.date)}</td>
         <td>${escapeHtml(c.customer || "—")}</td>
         <td>${c.items.length} item(s)</td>
@@ -438,6 +500,7 @@ function renderRecords() {
         (!q ||
           [
             c.challanNo,
+            c.billedNo,
             c.customer,
             ...c.items.flatMap((i) => [i.partName, i.partNumber]),
           ]
@@ -452,6 +515,7 @@ function renderRecords() {
       (c) => `
       <tr>
         <td>${escapeHtml(c.challanNo)}</td>
+        <td>${escapeHtml(c.billedNo || "—")}</td>
         <td>${formatDate(c.date)}</td>
         <td>${escapeHtml(c.customer || "—")}</td>
         <td class="num">${c.items.length}</td>
@@ -488,6 +552,7 @@ function editRecord(id) {
   $("form-mode-label").textContent = "Editing existing record";
   $("save-btn").textContent = "Update Challan";
   $("challan-no").value = c.challanNo;
+  $("billed-no").value = c.billedNo || "";
   $("sale-date").value = c.date;
   $("customer").value = c.customer || "";
   $("remarks").value = c.remarks || "";
@@ -600,6 +665,7 @@ $("export-excel").addEventListener("click", () => {
 
   const summary = challans.map((c) => ({
     "Challan Number": c.challanNo,
+    "Billed Number": c.billedNo || "",
     Date: c.date,
     Customer: c.customer || "",
     Items: c.items.length,
@@ -614,6 +680,7 @@ $("export-excel").addEventListener("click", () => {
     c.items.forEach((i) =>
       details.push({
         "Challan Number": c.challanNo,
+        "Billed Number": c.billedNo || "",
         Date: c.date,
         Customer: c.customer || "",
         "Part Name": i.partName,
@@ -862,6 +929,7 @@ function buildPrintableChallanHtml(challan) {
         <div class="title">Delivery / Sale Challan</div>
         <div class="no">${escapeHtml(challan.challanNo || "—")}</div>
         <div class="date">Date: ${escapeHtml(formatDate(challan.date))}</div>
+        <div class="date">Billed No.: ${escapeHtml(challan.billedNo || "—")}</div>
       </div>
     </div>
 
@@ -941,6 +1009,7 @@ $("print-challan").addEventListener("click", () => {
   const discount = items.reduce((a, i) => a + i.discount, 0);
   const challan = {
     challanNo: $("challan-no").value.trim() || "DRAFT",
+    billedNo: $("billed-no").value.trim(),
     date: $("sale-date").value || todayISO(),
     customer: $("customer").value.trim(),
     remarks: $("remarks").value.trim(),
